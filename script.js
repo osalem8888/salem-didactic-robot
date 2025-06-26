@@ -5,18 +5,18 @@ async function sendMessage() {
   const chatBox = document.getElementById('chat-box');
   chatBox.innerHTML += `<div><strong>You:</strong> ${input}</div>`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer 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' // 🔒 Replace with secret via Netlify or serverless
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a research assistant specialized in analyzing large volumes of text to identify indicators related to Freedom of Religion and Belief (FoRB). You must:
+  try {
+    const response = await fetch('https://forbindicatoragent.netlify.app/.netlify/functions/openai-proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a research assistant specialized in analyzing large volumes of text to identify indicators related to Freedom of Religion and Belief (FoRB). You must:
 
 - Provide concise summaries and highlight key findings.
 - Identify and formulate the top 20 indicators based solely on frequency and emphasis in the input documents.
@@ -35,15 +35,18 @@ Rules:
 5. Only return indicators rated High or Moderate.
 
 If no indicators can be extracted, explain why. If indicators are vague, ask the user for more data. Where appropriate, suggest SMART/SPICED refinements without altering the original meaning.`
-        },
-        { role: 'user', content: input }
-      ]
-    })
-  });
+          },
+          { role: 'user', content: input }
+        ]
+      })
+    });
 
-  const data = await response.json();
-  const reply = data.choices?.[0]?.message?.content || "No response.";
-  chatBox.innerHTML += `<div><strong>FoRB Agent:</strong> ${reply}</div>`;
-  document.getElementById('user-input').value = "";
-  chatBox.scrollTop = chatBox.scrollHeight;
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "No response.";
+    chatBox.innerHTML += `<div><strong>FoRB Agent:</strong> ${reply}</div>`;
+    document.getElementById('user-input').value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } catch (error) {
+    chatBox.innerHTML += `<div style='color: red;'><strong>Error:</strong> ${error.message}</div>`;
+  }
 }
